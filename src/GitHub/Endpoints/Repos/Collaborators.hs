@@ -11,6 +11,8 @@ module GitHub.Endpoints.Repos.Collaborators (
     collaboratorsOnR,
     isCollaboratorOn,
     isCollaboratorOnR,
+    collaboratorPermissionOnR,
+    collaboratorPermissionOn,
     module GitHub.Data,
     ) where
 
@@ -36,6 +38,23 @@ collaboratorsOn' auth user repo =
 collaboratorsOnR :: Name Owner -> Name Repo -> FetchCount -> Request k (Vector SimpleUser)
 collaboratorsOnR user repo =
     pagedQuery ["repos", toPathPart user, toPathPart repo, "collaborators"] []
+
+collaboratorPermissionOnR
+    :: Name Owner        -- ^ Repository owner
+    -> Name Repo         -- ^ Repository name
+    -> Name User         -- ^ Collaborator to check permissions of.
+    -> Request k CollaboratorWithPermission
+collaboratorPermissionOnR owner repo coll =
+    query ["repos", toPathPart owner, toPathPart repo, "collaborators", toPathPart coll, "permission"] []
+
+collaboratorPermissionOn
+    :: Maybe Auth
+    -> Name Owner        -- ^ Repository owner
+    -> Name Repo         -- ^ Repository name
+    -> Name User         -- ^ Collaborator to check permissions of.
+    -> IO (Either Error CollaboratorWithPermission)
+collaboratorPermissionOn auth owner repo coll =
+    executeRequestMaybe auth $ collaboratorPermissionOnR owner repo coll
 
 -- | Whether the user is collaborating on a repo. Takes the user in question,
 -- the user who owns the repo, and the repo name.
